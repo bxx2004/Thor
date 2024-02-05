@@ -7,11 +7,11 @@ class StringSource(var s:String):ThorSource() {
         return s.reader()
     }
 
-    override fun inject(s: String) {
-        this.s +="\n"+s
-    }
 
     override fun toString(): String {
         return s
     }
+}
+fun source(s:String):ThorSource{
+    return StringSource(s)
 }

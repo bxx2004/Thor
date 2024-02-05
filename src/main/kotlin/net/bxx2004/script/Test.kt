@@ -6,10 +6,14 @@ import net.bxx2004.script.simple.Parameter
 import net.bxx2004.script.source.StringSource
 
 fun main() {
-    var shell = JSShell()
+    val shell = JSShell()
     shell.injectFunction(
-        JSFunction("sum",
-        args =arrayListOf(Parameter.single("a"),Parameter.single("b"))
-        , expression = "return a*b;"),true
+        JSFunction(
+            "sum",
+            arrayListOf(Parameter.single("a")),
+            "return a+1;"
+        )
     )
+
+    shell.eval(StringSource("exports.sum = sum;"))
 }

@@ -1,5 +1,9 @@
 package net.bxx2004.script.javascript
 
+import com.github.alanger.commonjs.FilesystemFolder
+import com.github.alanger.commonjs.ModuleCache
+import com.github.alanger.commonjs.Require
+import com.github.alanger.commonjs.nashorn.NashornModule
 import net.bxx2004.script.*
 import net.bxx2004.script.error.ScriptTypeException
 import net.bxx2004.script.source.ThorSource
@@ -12,14 +16,16 @@ import javax.script.ScriptEngineManager
 
 
 class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
-    private val caches=CopyOnWriteArrayList<JSFunction>()
     private val engine = ScriptEngineManager().getEngineByName("nashorn") as NashornScriptEngine
-    private fun compileCache():String{
-        var result = ""
-        caches.forEach {
-            result += it.compile() + "\n"
-        }
-        return result
+    init {
+        val bindings = engine.getBindings(100)
+        val rootFolder = FilesystemFolder.create(File(options.PATH), "UTF-8")
+        val module = engine.eval("({})")
+        val exports = engine.eval("({})")
+        val created = NashornModule(engine,rootFolder, ModuleCache(),"<main>",module,exports,null,null)
+        bindings.put("require",created)
+        bindings.put("module",module)
+        bindings.put("exports",exports)
     }
 
     override fun options(): ThorOptions {
@@ -29,10 +35,10 @@ class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
         return engine.getBindings(ScriptContext.ENGINE_SCOPE)[name]
     }
     override fun eval(source: ThorSource, variable: Map<String, Any?>, executor: ThorExecutor): Any? {
-        if (options.ENABLE_CACHE_FUNCTION){
-            source.inject(compileCache())
-        }
         val bindings = engine.createBindings()
+        if (options.ENABLE_CACHE){
+            bindings.putAll(engine.getBindings(ScriptContext.ENGINE_SCOPE))
+        }
         variable.forEach { t, u ->
             bindings[t] = u
         }
@@ -66,9 +72,6 @@ class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
         engine.getBindings(ScriptContext.ENGINE_SCOPE).remove(name)
     }
     override fun compile(source: ThorSource, variable: Map<String, Any?>): ThorCompile {
-        if (options.ENABLE_CACHE_FUNCTION){
-            source.inject(compileCache())
-        }
         injectVariable(variable)
         val result = ThorCompile.make(engine.compile(source.reader()),type(),source.toString())
         variable.forEach{t,_ ->
@@ -80,7 +83,6 @@ class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
         if (function !is JSFunction){
             throw ScriptTypeException("ThorFunction is not a valid JSFunction")
         }
-        if (cache) caches.addIfAbsent(function)
         engine.eval(function.compile())
     }
 
