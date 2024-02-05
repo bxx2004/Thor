@@ -1,0 +1,23 @@
+#使用 ThorJIT 将其编译成 JS 文件
+#依赖最先执行
+libraries:
+  - "lib.yml as lib"
+init: |-
+  print("我是初始化语句");
+postpone:
+  print("我是结束语句");
+#定义函数
+function_test:
+  #是否对外开放
+  open: true
+  args: ["a","b"]
+  expression: |-
+    return a+b;
+#顺序执行语句
+#语句标记
+test: |-
+  print("完成");
+#对外开放
+exports:
+  test: test
+  a: a
