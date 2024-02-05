@@ -15,8 +15,6 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
-    implementation("org.yaml:snakeyaml:2.2")
-    //implementation("com.github.a-langer:jsr223-commonjs-modules:1.0.1")
 }
 
 tasks.test {
@@ -25,8 +23,4 @@ tasks.test {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
-}
-
-application {
-    mainClass.set("MainKt")
 }
