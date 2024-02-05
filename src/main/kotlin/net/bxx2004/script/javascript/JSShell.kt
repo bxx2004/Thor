@@ -2,21 +2,19 @@ package net.bxx2004.script.javascript
 
 import com.github.alanger.commonjs.FilesystemFolder
 import com.github.alanger.commonjs.ModuleCache
-import com.github.alanger.commonjs.Require
 import com.github.alanger.commonjs.nashorn.NashornModule
 import net.bxx2004.script.*
 import net.bxx2004.script.error.ScriptTypeException
 import net.bxx2004.script.source.ThorSource
 import org.openjdk.nashorn.api.scripting.NashornScriptEngine
+import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory
 import java.io.File
-import java.util.concurrent.CopyOnWriteArrayList
 import javax.script.CompiledScript
 import javax.script.ScriptContext
-import javax.script.ScriptEngineManager
 
 
 class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
-    private val engine = ScriptEngineManager().getEngineByName("nashorn") as NashornScriptEngine
+    private val engine = NashornScriptEngineFactory().scriptEngine as NashornScriptEngine
     init {
         val bindings = engine.getBindings(100)
         val rootFolder = FilesystemFolder.create(File(options.PATH), "UTF-8")
@@ -36,14 +34,14 @@ class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
     }
     override fun eval(source: ThorSource, variable: Map<String, Any?>, executor: ThorExecutor): Any? {
         val bindings = engine.createBindings()
-        if (options.ENABLE_CACHE){
+        if (options.ENABLE_CACHE) {
             bindings.putAll(engine.getBindings(ScriptContext.ENGINE_SCOPE))
         }
         variable.forEach { t, u ->
             bindings[t] = u
         }
         bindings["executor"] = executor
-        return engine.eval(source.reader(),bindings)
+        return engine.eval(source.reader(), bindings)
     }
 
     override fun invokeFunction(
@@ -53,10 +51,10 @@ class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
         variable: Map<String, Any?>
     ): Any? {
         if (compile != null){
-            if (compile.adapt() !is CompiledScript){
+            if (compile.adapt() !is JSCompile){
                 throw ScriptTypeException("ThorCompile is not a valid CompiledScript.")
             }
-            return engine.invokeMethod(compile.adapt(),name,*args.toTypedArray())
+            return compile.invokeFunction(name,args)
         }else{
             return engine.invokeFunction(name,*args.toTypedArray())
         }
@@ -73,7 +71,7 @@ class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
     }
     override fun compile(source: ThorSource, variable: Map<String, Any?>): ThorCompile {
         injectVariable(variable)
-        val result = ThorCompile.make(engine.compile(source.reader()),type(),source.toString())
+        val result = JSCompile(source,engine.compile(source.reader()))
         variable.forEach{t,_ ->
             removeVariable(t)
         }
