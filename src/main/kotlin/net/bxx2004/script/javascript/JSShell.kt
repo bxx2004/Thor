@@ -41,6 +41,9 @@ class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
             bindings[t] = u
         }
         bindings["executor"] = executor
+        if (bindings.contains("main")){
+            engine.getBindings(ScriptContext.ENGINE_SCOPE)["main"] = bindings["main"]
+        }
         return engine.eval(source.reader(), bindings)
     }
 

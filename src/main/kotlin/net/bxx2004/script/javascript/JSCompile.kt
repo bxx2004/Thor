@@ -17,9 +17,15 @@ class JSCompile(val source: ThorSource, val compile:CompiledScript):ThorCompile 
     }
 
     override fun eval(variable: Map<String, Any?>): Any? {
-        val binds = compile.engine.createBindings()
-        binds.putAll(compile.engine.getBindings(ScriptContext.ENGINE_SCOPE))
-        return compile.eval(binds)
+        val binds = compile.engine.getBindings(ScriptContext.ENGINE_SCOPE)
+        variable.forEach { t, u ->
+            binds[t] = u
+        }
+        var a = compile.eval(binds)
+        variable.forEach { t, _ ->
+            binds.remove(t)
+        }
+        return a
     }
 
     override fun invokeFunction(
