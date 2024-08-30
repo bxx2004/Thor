@@ -7,4 +7,5 @@ interface ThorCompile {
     fun source():Reader
     fun eval(variable:Map<String,Any?> = emptyMap()):Any?
     fun invokeFunction(name:String,args:List<Any?> = emptyList()):Any?
+    fun variable():Map<String,Any?>
 }

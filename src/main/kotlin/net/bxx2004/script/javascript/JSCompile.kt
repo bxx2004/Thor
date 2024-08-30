@@ -16,6 +16,9 @@ class JSCompile(val source: ThorSource, val compile:CompiledScript):ThorCompile 
         return source.reader()
     }
 
+    override fun variable(): Map<String, Any?> {
+        return compile.engine.getBindings(ScriptContext.ENGINE_SCOPE)
+    }
     override fun eval(variable: Map<String, Any?>): Any? {
         val binds = compile.engine.getBindings(ScriptContext.ENGINE_SCOPE)
         variable.forEach { t, u ->

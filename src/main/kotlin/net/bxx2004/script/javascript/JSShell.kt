@@ -1,31 +1,19 @@
 package net.bxx2004.script.javascript
 
-import com.github.alanger.commonjs.FilesystemFolder
-import com.github.alanger.commonjs.ModuleCache
-import com.github.alanger.commonjs.nashorn.NashornModule
 import net.bxx2004.script.*
 import net.bxx2004.script.error.ScriptTypeException
+import net.bxx2004.script.module.InstallAPI
 import net.bxx2004.script.source.ThorSource
 import org.openjdk.nashorn.api.scripting.NashornScriptEngine
 import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory
-import java.io.File
-import javax.script.CompiledScript
 import javax.script.ScriptContext
 
 
 class JSShell(val options: ThorOptions = ThorOptions.default()):ThorShell {
-    private val engine = NashornScriptEngineFactory().scriptEngine as NashornScriptEngine
+    private val engine = NashornScriptEngineFactory().getScriptEngine(options.CLASS_LOADER) as NashornScriptEngine
     init {
-        val bindings = engine.getBindings(100)
-        val rootFolder = FilesystemFolder.create(File(options.PATH), "UTF-8")
-        val module = engine.eval("({})")
-        val exports = engine.eval("({})")
-        val created = NashornModule(engine,rootFolder, ModuleCache(),"<main>",module,exports,null,null)
-        bindings.put("require",created)
-        bindings.put("module",module)
-        bindings.put("exports",exports)
+        injectVariable(hashMapOf(Pair("install", InstallAPI(this))))
     }
-
     override fun options(): ThorOptions {
         return options
     }
